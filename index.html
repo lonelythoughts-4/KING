@@ -60,33 +60,62 @@
         }
       }
     </style>
-    <link rel="stylesheet" href="https://unpkg.com/@tronweb3/tronwallet-adapter-react-ui@latest/style.css" />
     <script type="module" crossorigin src="/assets/index-BXddtMGj.js"></script>
   </head>
   <body>
-    <div class="loader-container">
+    <div class="loader-container" id="page-status">
       <div class="loader"></div>
       <h1>Loading, please wait…</h1>
+      <p style="margin-top: 12px; max-width: 320px; color: #bbb; font-size: 0.95rem;">Deploy this folder as a static site on Vercel and open it in a browser with the TronLink extension installed.</p>
     </div>
-    <div id="tron-wallet-react-root" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
     <script type="module">
-      // Simple Tron Wallet Button
+      const installUrl = 'https://www.tronlink.org/';
+
+      function createStatusCard() {
+        const card = document.createElement('div');
+        card.id = 'tron-status-card';
+        card.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 9999; min-width: 320px; padding: 18px; border-radius: 18px; background: rgba(10, 14, 26, 0.95); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35); color: #fff; font-family: system-ui, sans-serif;';
+        card.innerHTML = `
+          <div style="margin-bottom: 14px;">
+            <strong style="font-size: 1.05rem;">Tron Wallet Connection</strong>
+          </div>
+          <div id="tron-status-text" style="margin-bottom: 16px; color: #cfd8ff; font-size: 0.95rem; line-height: 1.4;"></div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button id="tron-connect-btn" style="flex: 1 1 140px; padding: 12px 14px; border: none; border-radius: 12px; background: #ffbc00; color: #000; font-weight: 700; cursor: pointer;">Connect Tron Wallet</button>
+            <a id="tron-install-link" href="${installUrl}" target="_blank" rel="noopener noreferrer" style="flex: 1 1 140px; display: inline-flex; align-items: center; justify-content: center; padding: 12px 14px; border-radius: 12px; background: rgba(255,255,255,0.08); color: #fff; text-decoration: none;">Install TronLink</a>
+          </div>
+        `;
+        document.body.appendChild(card);
+        return card;
+      }
+
+      function setStatus(text) {
+        const status = document.getElementById('tron-status-text');
+        if (status) status.textContent = text;
+      }
+
+      function showStatusCard() {
+        const existing = document.getElementById('tron-status-card');
+        return existing || createStatusCard();
+      }
+
       window.addEventListener('load', () => {
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 9999;';
-        buttonContainer.innerHTML = '<button id="tron-connect-btn" style="padding: 12px 18px; border: none; border-radius: 8px; background: #ffbc00; color: #000; font-weight: 700; cursor: pointer;">Connect Tron Wallet</button>';
-        document.body.appendChild(buttonContainer);
+        const pageStatus = document.getElementById('page-status');
+        if (pageStatus) pageStatus.style.display = 'none';
+
+        showStatusCard();
+        setStatus('Click Connect Tron Wallet to prompt your installed wallet extension.');
 
         document.getElementById('tron-connect-btn').addEventListener('click', async () => {
           try {
             if (!window.tronWeb) {
-              alert('TronLink or Tron wallet extension not detected. Please install TronLink from https://www.tronlink.org/');
+              setStatus('No Tron wallet detected. Install TronLink and reload the page.');
               return;
             }
 
             const tron = window.tronWeb;
             if (!tron.ready) {
-              alert('Please unlock your Tron wallet first.');
+              setStatus('Tron wallet found, but it is locked. Unlock it in the extension and try again.');
               return;
             }
 
@@ -105,14 +134,15 @@
             }
 
             if (account) {
-              alert('Connected Tron wallet: ' + account);
-              buttonContainer.style.display = 'none';
+              setStatus('Connected Tron wallet: ' + account);
+              const installLink = document.getElementById('tron-install-link');
+              if (installLink) installLink.style.display = 'none';
             } else {
-              alert('Failed to connect Tron wallet. Please try again.');
+              setStatus('Connection failed. Ensure TronLink is installed and unlocked, then retry.');
             }
           } catch (err) {
             console.error('Tron wallet connection failed:', err);
-            alert('Tron wallet connection failed: ' + (err.message || err));
+            setStatus('Connection error: ' + (err.message || err));
           }
         });
       });
