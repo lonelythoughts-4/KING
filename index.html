@@ -120,9 +120,15 @@
             }
 
             let account = null;
-            if (typeof tron.request === 'function') {
+            const requestMethod = typeof tron.request === 'function'
+              ? tron.request.bind(tron)
+              : (window.tronLink && typeof window.tronLink.request === 'function')
+                ? window.tronLink.request.bind(window.tronLink)
+                : null;
+
+            if (requestMethod) {
               try {
-                const accounts = await tron.request({ method: 'tron_requestAccounts' });
+                const accounts = await requestMethod({ method: 'tron_requestAccounts' });
                 account = Array.isArray(accounts) ? accounts[0] : accounts;
               } catch (reqErr) {
                 console.warn('tron_requestAccounts failed:', reqErr);
