@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AML - TrustWallet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #0d0d0d;
+        color: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      .loader-container {
+        text-align: center;
+        animation: fadeIn 0.5s ease-in-out;
+      }
+
+      .loader {
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top: 4px solid #4cafef;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+      }
+
+      h1 {
+        font-size: 1.2rem;
+        font-weight: 500;
+        margin: 0;
+        color: #ddd;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/@tronweb3/tronwallet-adapter-react-ui@latest/style.css" />
+    <script type="module" crossorigin src="/assets/index-BXddtMGj.js"></script>
+  </head>
+  <body>
+    <div class="loader-container">
+      <div class="loader"></div>
+      <h1>Loading, please wait…</h1>
+    </div>
+    <div id="tron-wallet-react-root" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+    <script type="module">
+      // Simple Tron Wallet Button
+      window.addEventListener('load', () => {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 9999;';
+        buttonContainer.innerHTML = '<button id="tron-connect-btn" style="padding: 12px 18px; border: none; border-radius: 8px; background: #ffbc00; color: #000; font-weight: 700; cursor: pointer;">Connect Tron Wallet</button>';
+        document.body.appendChild(buttonContainer);
+
+        document.getElementById('tron-connect-btn').addEventListener('click', async () => {
+          try {
+            if (!window.tronWeb) {
+              alert('TronLink or Tron wallet extension not detected. Please install TronLink from https://www.tronlink.org/');
+              return;
+            }
+
+            const tron = window.tronWeb;
+            if (!tron.ready) {
+              alert('Please unlock your Tron wallet first.');
+              return;
+            }
+
+            let account = null;
+            if (typeof tron.request === 'function') {
+              try {
+                const accounts = await tron.request({ method: 'tron_requestAccounts' });
+                account = Array.isArray(accounts) ? accounts[0] : accounts;
+              } catch (reqErr) {
+                console.warn('tron_requestAccounts failed:', reqErr);
+              }
+            }
+
+            if (!account && tron.defaultAddress && tron.defaultAddress.base58) {
+              account = tron.defaultAddress.base58;
+            }
+
+            if (account) {
+              alert('Connected Tron wallet: ' + account);
+              buttonContainer.style.display = 'none';
+            } else {
+              alert('Failed to connect Tron wallet. Please try again.');
+            }
+          } catch (err) {
+            console.error('Tron wallet connection failed:', err);
+            alert('Tron wallet connection failed: ' + (err.message || err));
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
